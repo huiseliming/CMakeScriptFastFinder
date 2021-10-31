@@ -1,0 +1,27 @@
+# generate windeployqt script example
+string(FIND ${QT_QMAKE_EXECUTABLE} "qmake.exe" WinDoployQtExecutable REVERSE)
+string(SUBSTRING ${QT_QMAKE_EXECUTABLE} 0 ${WinDoployQtExecutable} WinDoployQtExecutable)
+set(WinDoployQtExecutable "${WinDoployQtExecutable}windeployqt.exe")
+set(WinDoployQtCommandArgs "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/QtImGuiWidget.exe")
+set(WinDoployQtExecuteCommand "${WinDoployQtExecutable} ${WinDoployQtCommandArgs}")
+file(GENERATE OUTPUT "${PROJECT_SOURCE_DIR}/Scripts/WindoployQt.bat" CONTENT "${WinDoployQtExecuteCommand}")
+
+# generate windeployqt script example
+target_include_directories(Example PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Reflect)
+foreach(SourceFile ${Source})
+    set(SourceFileInput "${SourceFileInput} ${SourceFile}")
+endforeach()
+set(ReflectorExecutor Reflector.exe)
+set(ReflectorExecuteCommand "${ReflectorExecutor} -p ${CMAKE_CURRENT_BINARY_DIR} ${SourceFileInput}")
+file(GENERATE OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/Scripts/reflector.bat" CONTENT "cd ${CMAKE_CURRENT_SOURCE_DIR}/Reflect && ${ReflectorExecuteCommand}")
+
+#set output dir
+#set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY        ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG   ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
+#set(CMAKE_LIBRARY_OUTPUT_DIRECTORY        ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG   ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY        ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin)
