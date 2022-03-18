@@ -16,6 +16,7 @@ set(ReflectorExecuteCommand "${ReflectorExecutor} -p ${CMAKE_CURRENT_BINARY_DIR}
 file(GENERATE OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/Scripts/reflector.bat" CONTENT "cd ${CMAKE_CURRENT_SOURCE_DIR}/Reflect && ${ReflectorExecuteCommand}")
 
 #set output dir
+# 1
 #set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY        ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG   ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
@@ -25,3 +26,73 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY        ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin)
+# 2
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY        ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY        ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY        ${CMAKE_BINARY_DIR}/bin)
+
+foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+endforeach(OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
+
+
+
+# find generated source file
+file(GLOB_RECURSE Header *.h)
+list(FILTER Header  EXCLUDE REGEX "^.*\\.refl\\.generated\\.h")
+file(GLOB_RECURSE Source *.cpp)
+list(FILTER Source  EXCLUDE REGEX "^.*\\.refl\\.generated\\.cpp")
+
+# Refl collect refl file
+file(GLOB_RECURSE ReflHeaders *.refl.h)
+unset(ReflGeneratedHeaders)
+unset(ReflGeneratedSources)
+foreach(ReflHeader ${ReflHeaders})
+    string(FIND ${ReflHeader} ".h" HeaderFileDotHPos REVERSE)
+    string(SUBSTRING ${ReflHeader} 0 ${HeaderFileDotHPos} HeaderFileNameNoDotH)
+    set(GeneratedHeaderName ${HeaderFileNameNoDotH})
+    set(GeneratedSourceName ${HeaderFileNameNoDotH})
+    string(APPEND GeneratedHeaderName ".generated.h")
+    string(APPEND GeneratedSourceName ".generated.cpp")
+    list(APPEND ReflGeneratedHeaders ${GeneratedHeaderName})
+    list(APPEND ReflGeneratedSources ${GeneratedSourceName})
+    if(NOT EXISTS ${GeneratedHeaderName})
+        file(WRITE ${GeneratedHeaderName}  "#pragma once")
+    endif()
+endforeach()
+
+
+# Refl run generator
+target_link_libraries(ThisTarget PUBLIC Refl)
+add_custom_target(ThisTarget-ReflGenerator
+    ALL
+    COMMAND ReflGenerator 
+    --database_dir ${CMAKE_BINARY_DIR} 
+    --std c++20 
+#    --export_name ThisTarget 
+    --macro_definition __REFL_GENERATED__
+    ${ReflHeaders}
+    DEPENDS ${ReflHeaders}
+    BYPRODUCTS ${ReflGeneratedHeaders} ${ReflGeneratedSources}
+    COMMENT "working for refl generated ..."
+    )
+    
+add_dependencies(ThisTarget-ReflGenerator ReflGenerator)
+add_dependencies(ThisTarget ThisTarget-ReflGenerator)
+
+# sort source group for IDE
+source_group(
+  TREE ${CMAKE_CURRENT_SOURCE_DIR} 
+  PREFIX Source 
+  FILES ${Source} ${Header}
+)
+
+source_group(
+  TREE ${CMAKE_CURRENT_SOURCE_DIR} 
+  PREFIX ReflGenerated 
+  FILES ${ReflGeneratedHeaders} ${ReflGeneratedSources}
+)
+
