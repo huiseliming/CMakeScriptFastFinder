@@ -1,0 +1,20 @@
+{
+    //"clangd.arguments": ["--compile-commands-dir=${workspaceFolder}/build"],
+    //"clangd.path": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/Llvm/bin/clangd.exe",
+    // "cmake.configureOnOpen": true,
+    //"cmake.generator": "Ninja",
+    "cmake.cmakePath": "${env:QT_CMAKE_EXECUTABLE}",
+    "cmake.environment": {
+        "PATH" : "${env:PATH}:${env:QT5_BINARY_PATH}"
+    },
+    "cmake.configureArgs": [
+        //"-DCMAKE_BUILD_TYPE:STRING=Debug" ,
+        "-DCMAKE_PROJECT_INCLUDE_BEFORE:PATH=${env:QT_ROOT_PATH}/Tools/QtCreator/share/qtcreator/package-manager/auto-setup.cmake" ,
+        "-DQT_QMAKE_EXECUTABLE:STRING=${env:QT5_BINARY_PATH}/bin/qmake.exe" ,
+        "-DCMAKE_PREFIX_PATH:STRING=${env:QT5_BINARY_PATH}" ,
+    ],
+}
+
+//-DCMAKE_PROJECT_INCLUDE_BEFORE:PATH=C:/Qt/Tools/QtCreator/share/qtcreator/package-manager/auto-setup.cmake 
+//-DQT_QMAKE_EXECUTABLE:STRING=C:/Qt/5.15.2/msvc2019/bin/qmake.exe 
+//-DCMAKE_PREFIX_PATH:STRING=C:/Qt/5.15.2/msvc2019
