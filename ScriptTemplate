@@ -96,3 +96,6 @@ source_group(
   FILES ${ReflGeneratedHeaders} ${ReflGeneratedSources}
 )
 
+# add debug working directory for visual studio msbuild
+set_property(TARGET Target PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+
