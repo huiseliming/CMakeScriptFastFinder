@@ -1,3 +1,11 @@
+if(DEFINED ENV{VCPKG_ROOT})
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+endif()
+set(VCPKG_TARGET_TRIPLET "x86-windows" CACHE STRING "")
+message("CMAKE_TOOLCHAIN_FILE: " ${CMAKE_TOOLCHAIN_FILE})
+message("VCPKG_TARGET_TRIPLET: " ${VCPKG_TARGET_TRIPLET})
+
+
 # generate windeployqt script example
 string(FIND ${QT_QMAKE_EXECUTABLE} "qmake.exe" WinDoployQtExecutable REVERSE)
 string(SUBSTRING ${QT_QMAKE_EXECUTABLE} 0 ${WinDoployQtExecutable} WinDoployQtExecutable)
@@ -98,4 +106,32 @@ source_group(
 
 # add debug working directory for visual studio msbuild
 set_property(TARGET Target PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY        ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY        ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY        ${CMAKE_BINARY_DIR}/lib)
+
+foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+endforeach(OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
+
+if(WIN32)
+    add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+    add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+endif()
+
+# Define the two required variables before including
+# the source code for watching a git repository.
+set(PRE_CONFIGURE_FILE "cmake/git_version.cpp.template")
+set(POST_CONFIGURE_FILE "${CMAKE_CURRENT_BINARY_DIR}/git_version.cpp")
+include(cmake/git_watcher.cmake)
+
+# Create a library out of the compiled post-configure file.
+add_library(GitVersion STATIC ${POST_CONFIGURE_FILE})
+target_include_directories(GitVersion PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_dependencies(GitVersion check_git)
+target_link_libraries(MainTarget PRIVATE GitVersion)
 
